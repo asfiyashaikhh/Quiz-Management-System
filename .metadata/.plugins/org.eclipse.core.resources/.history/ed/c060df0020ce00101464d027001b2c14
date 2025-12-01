@@ -1,0 +1,179 @@
+
+package com.example.quiz.service;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.quiz.dto.AdminAttemptDTO;
+import com.example.quiz.dto.QuizDTO;
+import com.example.quiz.dto.RankingDTO;
+import com.example.quiz.dto.StudentResultDTO;
+import com.example.quiz.dto.SubmitQuizRequest;
+import com.example.quiz.entity.Question;
+import com.example.quiz.entity.Quiz;
+import com.example.quiz.entity.QuizAttempt;
+import com.example.quiz.entity.User;
+import com.example.quiz.repository.QuizAttemptRepository;
+import com.example.quiz.repository.QuizRepository;
+import com.example.quiz.repository.UserRepository;
+
+@Service
+public class QuizService {
+
+    private final QuizRepository quizRepo;
+    private final QuizAttemptRepository attemptRepo;
+    private final UserRepository userRepo;
+
+    public QuizService(QuizRepository quizRepo, QuizAttemptRepository attemptRepo, UserRepository userRepo) {
+        this.quizRepo = quizRepo;
+        this.attemptRepo = attemptRepo;
+        this.userRepo = userRepo;
+    }
+
+    public List<QuizDTO> getQuizzesForStudent(Long userId) {
+        User user = userRepo.findById(userId).orElseThrow();
+        List<Quiz> quizzes = quizRepo.findAll();
+        List<QuizDTO> result = new ArrayList<>();
+        for (Quiz q : quizzes) {
+            QuizDTO dto = new QuizDTO();
+            dto.setId(q.getId());
+            dto.setTitle(q.getTitle());
+            dto.setDescription(q.getDescription());
+            dto.setDurationMinutes(q.getDurationMinutes());
+            boolean attempted = attemptRepo.findByUserAndQuiz(user, q).isPresent();
+            dto.setAlreadyAttempted(attempted);
+            result.add(dto);
+        }
+        return result;
+    }
+
+    public QuizDTO getQuizForAttempt(Long quizId) {
+        Quiz quiz = quizRepo.findById(quizId).orElseThrow();
+        QuizDTO dto = new QuizDTO();
+        dto.setId(quiz.getId());
+        dto.setTitle(quiz.getTitle());
+        dto.setDescription(quiz.getDescription());
+        dto.setDurationMinutes(quiz.getDurationMinutes());
+
+        List<QuizDTO.QuestionDTO> questionDTOs = new ArrayList<>();
+        for (Question q : quiz.getQuestions()) {
+            QuizDTO.QuestionDTO qdto = new QuizDTO.QuestionDTO();
+            qdto.setId(q.getId());
+            qdto.setText(q.getText());
+            qdto.setOptions(Arrays.asList(
+                    q.getOptionA(),
+                    q.getOptionB(),
+                    q.getOptionC(),
+                    q.getOptionD()
+            ));
+            questionDTOs.add(qdto);
+        }
+        dto.setQuestions(questionDTOs);
+        return dto;
+    }
+
+    public int submitQuiz(Long userId, Long quizId, List<SubmitQuizRequest.AnswerInput> answers) {
+        User user = userRepo.findById(userId).orElseThrow();
+        Quiz quiz = quizRepo.findById(quizId).orElseThrow();
+
+        // enforce one attempt
+        if (attemptRepo.findByUserAndQuiz(user, quiz).isPresent()) {
+            throw new RuntimeException("Quiz already attempted");
+        }
+
+        int score = 0;
+        Map<Long, Integer> answerMap = new HashMap<>();
+        for (SubmitQuizRequest.AnswerInput a : answers) {
+            if (a.getQuestionId() != null && a.getSelectedOption() != null) {
+                answerMap.put(a.getQuestionId(), a.getSelectedOption());
+            }
+        }
+
+        for (Question q : quiz.getQuestions()) {
+            Integer sel = answerMap.get(q.getId());
+            if (sel != null && sel == q.getCorrectOptionIndex()) {
+                score++;
+            }
+        }
+
+        QuizAttempt attempt = new QuizAttempt();
+        attempt.setUser(user);
+        attempt.setQuiz(quiz);
+        attempt.setScore(score);
+        attempt.setStartedAt(LocalDateTime.now());
+        attempt.setCompletedAt(LocalDateTime.now());
+        attemptRepo.save(attempt);
+
+        return score;
+    }
+
+    public List<StudentResultDTO> getResultsForStudent(Long userId) {
+        User user = userRepo.findById(userId).orElseThrow();
+        List<QuizAttempt> attempts = attemptRepo.findByUser(user);
+        List<StudentResultDTO> result = new ArrayList<>();
+        for (QuizAttempt a : attempts) {
+            result.add(new StudentResultDTO(
+                    a.getId(),
+                    a.getQuiz().getTitle(),
+                    a.getScore(),
+                    a.getCompletedAt()
+            ));
+        }
+        return result;
+    }
+
+    public List<RankingDTO> getRanking() {
+        List<QuizAttempt> all = attemptRepo.findAll();
+        Map<Long, Integer> totals = new HashMap<>();
+        Map<Long, String> names = new HashMap<>();
+
+        for (QuizAttempt a : all) {
+            Long uid = a.getUser().getId();
+            totals.put(uid, totals.getOrDefault(uid, 0) + a.getScore());
+            names.put(uid, a.getUser().getName());
+        }
+
+        List<RankingDTO> result = new ArrayList<>();
+        for (Map.Entry<Long, Integer> e : totals.entrySet()) {
+            result.add(new RankingDTO(e.getKey(), names.get(e.getKey()), e.getValue()));
+        }
+
+        result.sort((a, b) -> Integer.compare(b.getTotalScore(), a.getTotalScore()));
+        return result;
+    }  
+    
+    @Transactional
+    public void deleteQuiz(Long quizId) {
+
+        // 1️⃣ First delete all attempts belonging to the quiz
+        attemptRepo.deleteByQuizId(quizId);
+
+        // 2️⃣ Now safely delete quiz
+        Quiz quiz = quizRepo.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+        
+        quizRepo.delete(quiz);
+    }
+
+    public List<AdminAttemptDTO> getAllAttemptsForAdmin() {
+        List<QuizAttempt> all = attemptRepo.findAll();
+        List<AdminAttemptDTO> result = new ArrayList<>();
+        for (QuizAttempt a : all) {
+            result.add(new AdminAttemptDTO(
+                    a.getId(),
+                    a.getUser().getName(),
+                    a.getQuiz().getTitle(),
+                    a.getScore(),
+                    a.getCompletedAt()
+            ));
+        }
+        return result;
+    }
+}

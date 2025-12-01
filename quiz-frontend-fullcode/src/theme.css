@@ -1,0 +1,202 @@
+/* src/theme.css */
+
+/* Make page fill the full viewport and remove white gap */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Fallback background behind your React app (for dark mode look) */
+body {
+  background-color: #121212;  /* same as your dark theme background */
+}
+
+/* Ensure React root can stretch */
+#root {
+  min-height: 100vh;
+}
+
+
+* {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Light theme */
+.theme-light {
+  background-color: #f5f5f5;
+  color: #212529;
+  min-height: 100vh;
+}
+
+.theme-light .card {
+  background-color: #ffffff;
+  color: #212529;
+}
+
+/* Dark theme */
+.theme-dark {
+  background-color: #121212;
+  color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.theme-dark .p{
+color: #f8f9fa;
+}
+
+.theme-dark .card {
+  background-color: #1f1f1f;
+  color: #f8f9fa;
+}
+
+.theme-dark .navbar {
+  background-color: #20232a !important;
+}
+
+.theme-dark .form-control,
+.theme-dark .form-select,
+.theme-dark .form-check-input {
+  background-color: #2b2b2b;
+  color: #f8f9fa;
+  border-color: #444;
+}
+
+.theme-dark .form-control::placeholder {
+  color: #aaa;
+}
+
+
+.dark p.my-dark-text {
+  color: #ffffff !important; /* white text */
+   max-width: 650px;        /* paragraph ka ideal width */
+  margin: 0 auto;          /* center align the block */
+  text-align: justify;     /* equal clean alignment */
+  text-justify: inter-word;
+  line-height: 1.7;        /* spacing between lines */
+  font-size: 1.1rem;       /* readable size */
+  padding: 10px 5px;       /* light spacing inside */
+}
+
+.light p.my-dark-text {
+  color: #000000 !important; /* black text */
+   max-width: 650px;        /* paragraph ka ideal width */
+  margin: 0 auto;          /* center align the block */
+  text-align: justify;     /* equal clean alignment */
+  text-justify: inter-word;
+  line-height: 1.7;        /* spacing between lines */
+  font-size: 1.1rem;       /* readable size */
+  padding: 10px 5px;       /* light spacing inside */
+}
+
+
+/* Light mode footer */
+.theme-light .footer-base {
+  background-color: #f8f9fa;   /* light navbar-like color */
+  color: #212529;
+}
+
+/* Dark mode footer */
+.theme-dark .footer-base {
+  background-color: #20232a;   /* same as dark navbar */
+  color: #f8f9fa;
+}
+
+/* Hover effect for navbar links */
+.nav-hover {
+  position: relative;
+  transition: color 0.25s ease-in-out;
+}
+
+.nav-hover:hover {
+  color: #ffffff !important; /* brighter on hover */
+}
+
+/* Underline animation */
+.nav-hover::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 2px;
+  width: 0%;
+  background-color: #ffffff;
+  transition: width 0.3s ease;
+}
+
+.nav-hover:hover::after {
+  width: 100%;
+}
+
+.theme-dark .nav-hover::after {
+  background-color: #61dafb; /* light blue underline in dark mode */
+}
+
+.theme-light .nav-hover::after {
+  background-color: #1c0f67; /* primary blue underline in light mode */
+}
+
+
+/* Running gradient text animation for username */
+.username-glow {
+  font-weight: 600;
+  background: linear-gradient(90deg, #023455, #e7ebed,#799fb1,#023455, #121212);
+  background-size: 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: usernameRun 6s infinite linear;
+}
+
+/* Animation keyframes */
+@keyframes usernameRun {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 400% 50%;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+/* By default: show light image, hide dark image */
+.dashboard-img-light {
+  display: block;
+}
+
+.dashboard-img-dark {
+  display: none;
+  width:91%;
+}
+
+/* In dark theme: show dark image, hide light image */
+.theme-dark .dashboard-img-light {
+  display: none;
+}
+
+.theme-dark .dashboard-img-dark {
+  display: block;
+}
+
+/* (Optional) If you also use .dark / .light classes somewhere */
+.dark .dashboard-img-light {
+  display: none;
+}
+.dark .dashboard-img-dark {
+  display: block;
+}
+.light .dashboard-img-light {
+  display: block;
+}
+.light .dashboard-img-dark {
+  display: none;
+}

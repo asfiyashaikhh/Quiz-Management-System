@@ -1,0 +1,15 @@
+
+package com.example.quiz.repository;
+
+import com.example.quiz.entity.QuizAttempt;
+import com.example.quiz.entity.User;
+import com.example.quiz.entity.Quiz;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> {
+    Optional<QuizAttempt> findByUserAndQuiz(User user, Quiz quiz);
+    List<QuizAttempt> findByUser(User user);
+}

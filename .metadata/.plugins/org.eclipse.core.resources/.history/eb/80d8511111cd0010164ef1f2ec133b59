@@ -1,0 +1,109 @@
+
+
+yeh hai mera user service `//
+//package com.example.quiz.service;
+//
+//import com.example.quiz.dto.LoginRequest;
+//import com.example.quiz.dto.LoginResponse;
+//import com.example.quiz.dto.RegisterRequest;
+//import com.example.quiz.entity.User;
+//import com.example.quiz.repository.UserRepository;
+//import org.springframework.stereotype.Service;
+//
+//@Service
+//public class UserService {
+//
+//    private final UserRepository userRepo;
+//
+//    public UserService(UserRepository userRepo) {
+//        this.userRepo = userRepo;
+//    }
+//
+//    public void register(RegisterRequest req) {
+//        userRepo.findByEmail(req.getEmail()).ifPresent(u -> {
+//            throw new RuntimeException("Email already registered");
+//        });
+//
+//        User u = new User();
+//        u.setName(req.getName());
+//        u.setEmail(req.getEmail());
+//        u.setPassword(req.getPassword()); // for demo only, no hashing
+//        u.setPrnNo(req.getPrnNo());
+//        u.setRole(User.Role.valueOf(req.getRole()));
+//        userRepo.save(u);
+//    }
+//
+//    public LoginResponse login(LoginRequest req) {
+//        User u = userRepo.findByEmail(req.getEmail())
+//                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+//        if (!u.getPassword().equals(req.getPassword())) {
+//            throw new RuntimeException("Invalid credentials");
+//        }
+//        return new LoginResponse(u.getId(), u.getName(), u.getEmail(), u.getRole().name());
+//    }
+//
+//    public User getById(Long id) {
+//        return userRepo.findById(id).orElseThrow();
+//    }
+//}
+
+
+// src/main/java/com/example/quiz/service/UserService.java
+package com.example.quiz.service;
+
+import com.example.quiz.dto.LoginRequest;
+import com.example.quiz.dto.LoginResponse;
+import com.example.quiz.dto.RegisterRequest;
+import com.example.quiz.entity.User;
+import com.example.quiz.repository.UserRepository;
+import com.example.quiz.security.JwtUtil;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserService {
+
+    private final UserRepository userRepo;
+    private final JwtUtil jwtUtil;
+
+    public UserService(UserRepository userRepo, JwtUtil jwtUtil) {
+        this.userRepo = userRepo;
+        this.jwtUtil = jwtUtil;
+    }
+
+    public void register(RegisterRequest req) {
+        userRepo.findByEmail(req.getEmail()).ifPresent(u -> {
+            throw new RuntimeException("Email already registered");
+        });
+
+        User u = new User();
+        u.setName(req.getName());
+        u.setEmail(req.getEmail());
+        u.setPassword(req.getPassword()); // plain text for demo
+        u.setPrnNo(req.getPrnNo());
+        u.setRole(User.Role.valueOf(req.getRole()));
+        userRepo.save(u);
+    }
+
+    public LoginResponse login(LoginRequest req) {
+        User u = userRepo.findByEmail(req.getEmail())
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        if (!u.getPassword().equals(req.getPassword())) {
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        String token = jwtUtil.generateToken(u.getEmail(), u.getRole().name());
+
+        return new LoginResponse(
+                u.getId(),
+                u.getName(),
+                u.getEmail(),
+                u.getRole().name(),
+                token
+        );
+    }
+
+    public User getById(Long id) {
+        return userRepo.findById(id).orElseThrow();
+    }
+}
+`

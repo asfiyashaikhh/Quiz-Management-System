@@ -1,0 +1,46 @@
+
+package com.example.quiz.controller;
+
+import com.example.quiz.dto.*;
+import com.example.quiz.service.QuizService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/student")
+
+public class StudentController {
+
+    private final QuizService quizService;
+
+    public StudentController(QuizService quizService) {
+        this.quizService = quizService;
+    }
+
+    @GetMapping("/quizzes")
+    public List<QuizDTO> getQuizzes(@RequestParam Long userId) {
+        return quizService.getQuizzesForStudent(userId);
+    }
+
+    @GetMapping("/quizzes/{quizId}")
+    public QuizDTO getQuiz(@PathVariable Long quizId) {
+        return quizService.getQuizForAttempt(quizId);
+    }
+
+    @PostMapping("/quizzes/submit")
+    public SubmitQuizResponse submitQuiz(@RequestBody SubmitQuizRequest req) {
+        int score = quizService.submitQuiz(req.getUserId(), req.getQuizId(), req.getAnswers());
+        return new SubmitQuizResponse(score);
+    }
+
+    @GetMapping("/results")
+    public List<StudentResultDTO> results(@RequestParam Long userId) {
+        return quizService.getResultsForStudent(userId);
+    }
+
+    @GetMapping("/ranking")
+    public List<RankingDTO> ranking() {
+        return quizService.getRanking();
+    }
+}

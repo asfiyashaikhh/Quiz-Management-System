@@ -1,0 +1,59 @@
+package com.example.quiz.dto;
+
+public class RankingDTO {
+
+    private Long userId;
+    private String name;
+    // totalScore stores percentage (0.0 - 100.0)
+    private double totalScore;
+
+    // new: numeric rank (1,2,3...)
+    private int rank;
+
+    public RankingDTO() {
+    }
+
+    // constructor used in service: (userId, name, percent)
+    public RankingDTO(Long userId, String name, double totalScore) {
+        this.userId = userId;
+        this.name = name;
+        this.totalScore = totalScore;
+        this.rank = 0; // default, will be set by service
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Returns percentage value (double).
+     * Kept method name getTotalScore() for compatibility.
+     */
+    public double getTotalScore() {
+        return totalScore;
+    }
+
+    public void setTotalScore(double totalScore) {
+        this.totalScore = totalScore;
+    }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
+    }
+}
